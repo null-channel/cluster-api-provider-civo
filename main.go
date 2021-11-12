@@ -53,17 +53,24 @@ func init() {
 
 func GetCivoClient() *civogo.Client {
 	apiKey := os.Getenv("CIVO_API_KEY")
+	region := os.Getenv("CIVO_REGION")
+	if region == "" {
+		log.Println("Civo region was not set, using default London 1")
+		region = "London 1"
+		return nil
+	}
 	if apiKey == "" {
 		log.Println("unable to retrieve civo api key")
 		return nil
 	}
-	client, err := civogo.NewClient(apiKey, "London 1")
+	client, err := civogo.NewClient(apiKey, region)
 	if err != nil {
 		log.Printf("unable to create civo client.Reason %s", err)
 
 	}
 	return client
 }
+
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
