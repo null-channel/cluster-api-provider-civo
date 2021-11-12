@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	"github.com/civo/civogo"
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/cluster-api/util"
@@ -41,7 +42,7 @@ const (
 // CivoClusterReconciler reconciles a CivoCluster object
 type CivoClusterReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme     *runtime.Scheme
 	CivoClient *civogo.Client
 }
 
@@ -103,6 +104,12 @@ func (r *CivoClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 // TODO Cluster deletion
 func (r *CivoClusterReconciler) delete(ctx context.Context, logger logr.Logger, civoCluster *infrastructurev1beta1.CivoCluster) (ctrl.Result, error) {
+	logger = log.FromContext(ctx)
+	logger.Info("Deleting civo cluster")
+	_, err := r.CivoClient.DeleteKubernetesCluster(*civoCluster.Spec.ID)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to delete cluster: %w", err)
+	}
 	return ctrl.Result{}, nil
 }
 
@@ -111,6 +118,7 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 
 	// Create cluster
 	kc, err := r.CivoClient.NewKubernetesClusters(&civoCluster.Spec.Config)
+	civoCluster.Spec.ID = &kc.ID
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to create cluster: %w", err)
 	}
@@ -123,7 +131,6 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 
 	return ctrl.Result{}, nil
 }
-
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *CivoClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
