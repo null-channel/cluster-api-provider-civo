@@ -18,27 +18,30 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/civo/civogo"
+	infrastructurev1alpha1 "github.com/null-channel/cluster-api-provider-civo/api/v1alpha1"
+	"github.com/null-channel/cluster-api-provider-civo/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/internal/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	infrastructurev1alpha1 "github.com/null-channel/cluster-api-provider-civo/api/v1alpha1"
-	"github.com/null-channel/cluster-api-provider-civo/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	client   = GetCivoClient()
 )
 
 func init() {
@@ -48,6 +51,19 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
+func GetCivoClient() *civogo.Client {
+	apiKey := os.Getenv("CIVO_API_KEY")
+	if apiKey == "" {
+		log.Println("unable to retrieve civo api key")
+		return nil
+	}
+	client, err := civogo.NewClient(apiKey, "London 1")
+	if err != nil {
+		log.Printf("unable to create civo client.Reason %s", err)
+
+	}
+	return client
+}
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
