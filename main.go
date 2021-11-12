@@ -18,7 +18,7 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -26,49 +26,52 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/civo/civogo"
-	infrastructurev1alpha1 "github.com/null-channel/cluster-api-provider-civo/api/v1alpha1"
-	"github.com/null-channel/cluster-api-provider-civo/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/internal/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	infrastructurev1alpha1 "github.com/null-channel/cluster-api-provider-civo/api/v1alpha1"
+	infrastructurev1beta1 "github.com/null-channel/cluster-api-provider-civo/api/v1beta1"
+	"github.com/null-channel/cluster-api-provider-civo/controllers"
 	//+kubebuilder:scaffold:imports
+)
+
+const (
+	defaultRegion = "LON1"
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
-	client   = GetCivoClient()
 )
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(infrastructurev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
-func GetCivoClient() *civogo.Client {
+func GetCivoClient() (*civogo.Client, error) {
 	apiKey := os.Getenv("CIVO_API_KEY")
 	region := os.Getenv("CIVO_REGION")
 	if region == "" {
-		log.Println("Civo region was not set, using default London 1")
-		region = "LON1"
-		return nil
+		setupLog.Info(fmt.Sprintf("Civo region was not set, using default %s", defaultRegion), "")
+		region = defaultRegion
 	}
 	if apiKey == "" {
-		log.Println("unable to retrieve civo api key")
-		return nil
+		return nil, fmt.Errorf("unable to retrieve civo api key")
 	}
 	client, err := civogo.NewClient(apiKey, region)
 	if err != nil {
-		log.Printf("unable to create civo client.Reason %s", err)
-
+		return nil, fmt.Errorf("unable to create civo client: %w", err)
 	}
-	return client
+
+	return client, nil
 }
 
 func main() {
@@ -101,9 +104,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	civoClient, err := GetCivoClient()
+	if err != nil {
+		setupLog.Error(err, "failed to init Civo client")
+		os.Exit(1)
+	}
 	if err = (&controllers.CivoClusterReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		CivoClient: civoClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CivoCluster")
 		os.Exit(1)
