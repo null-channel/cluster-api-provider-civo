@@ -56,7 +56,7 @@ func GetCivoClient() *civogo.Client {
 	region := os.Getenv("CIVO_REGION")
 	if region == "" {
 		log.Println("Civo region was not set, using default London 1")
-		region = "London 1"
+		region = "LON1"
 		return nil
 	}
 	if apiKey == "" {
