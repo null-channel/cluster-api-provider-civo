@@ -1,0 +1,21 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: cluster-sample
+spec:
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: CivoCluster
+    name: civocluster-sample
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: CivoCluster
+metadata:
+  name: civocluster-sample
+spec:
+  config:
+    name: sample
+    region: LON1
+    num_target_nodes: 0
+    target_nodes_size: "Extra Small"
+    kubernetes_version: "1.22"

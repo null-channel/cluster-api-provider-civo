@@ -102,7 +102,6 @@ func (r *CivoClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return r.reconcile(ctx, logger, civoCluster)
 }
 
-// TODO Cluster deletion
 func (r *CivoClusterReconciler) delete(ctx context.Context, logger logr.Logger, civoCluster *infrastructurev1beta1.CivoCluster) (ctrl.Result, error) {
 	logger = log.FromContext(ctx)
 	logger.Info("Deleting civo cluster")
@@ -120,8 +119,6 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 	if civoCluster.Spec.ID == nil {
 		// Create cluster
 		kc, err := r.CivoClient.NewKubernetesClusters(infrastructurev1beta1.ToCivoKubernetesStruct(&civoCluster.Spec.Config))
-
-		civoCluster.Spec.ID = &kc.ID
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to create cluster: %w", err)
 		}
@@ -129,6 +126,7 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 			return ctrl.Result{}, fmt.Errorf("not able to retrieve Contol Plane IP")
 		}
 
+		civoCluster.Spec.ID = &kc.ID
 		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
 		civoCluster.Status.Ready = true
 		return ctrl.Result{}, nil
@@ -136,7 +134,6 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 
 	// Update cluster
 	kc, err := r.CivoClient.UpdateKubernetesCluster(*civoCluster.Spec.ID, infrastructurev1beta1.ToCivoKubernetesStruct(&civoCluster.Spec.Config))
-
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to update cluster: %w", err)
 	}

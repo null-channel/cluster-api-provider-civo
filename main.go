@@ -32,6 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	infrastructurev1beta1 "github.com/null-channel/cluster-api-provider-civo/api/v1beta1"
 	"github.com/null-channel/cluster-api-provider-civo/controllers"
@@ -49,8 +50,9 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
+	utilruntime.Must(clusterapi.AddToScheme(scheme))
 	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme))
+
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -58,7 +60,7 @@ func GetCivoClient() (*civogo.Client, error) {
 	apiKey := os.Getenv("CIVO_API_KEY")
 	region := os.Getenv("CIVO_REGION")
 	if region == "" {
-		setupLog.Info(fmt.Sprintf("Civo region was not set, using default %s", defaultRegion), "")
+		setupLog.Info(fmt.Sprintf("Civo region was not set, using default %s", defaultRegion))
 		region = defaultRegion
 	}
 	if apiKey == "" {

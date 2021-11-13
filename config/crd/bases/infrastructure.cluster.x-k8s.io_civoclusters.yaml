@@ -5,6 +5,8 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
+  labels:
+    cluster.x-k8s.io/v1beta1: v1beta1
   creationTimestamp: null
   name: civoclusters.infrastructure.cluster.x-k8s.io
 spec:
@@ -37,7 +39,7 @@ spec:
             description: CivoClusterSpec defines the desired state of CivoCluster
             properties:
               config:
-                description: Config represents Civo Kubernetes cluster config
+                description: KubernetesClusterConfig is used to create a new cluster
                 properties:
                   applications:
                     type: string
