@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	infrastructurev1alpha1 "github.com/null-channel/cluster-api-provider-civo/api/v1alpha1"
+	infrastructurev1beta1 "github.com/null-channel/cluster-api-provider-civo/api/v1beta1"
 )
 
 // CivoMachineReconciler reconciles a CivoMachine object
@@ -57,6 +57,6 @@ func (r *CivoMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 // SetupWithManager sets up the controller with the Manager.
 func (r *CivoMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&infrastructurev1alpha1.CivoMachine{}).
+		For(&infrastructurev1beta1.CivoMachine{}).
 		Complete(r)
 }

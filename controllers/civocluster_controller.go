@@ -118,7 +118,8 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 	controllerutil.AddFinalizer(civoCluster, civoClusterFinalizer)
 
 	// Create cluster
-	kc, err := r.CivoClient.NewKubernetesClusters(&civoCluster.Spec.Config)
+	kc, err := r.CivoClient.NewKubernetesClusters(infrastructurev1beta1.ToCivoKubernetesStruct(&civoCluster.Spec.Config))
+
 	civoCluster.Spec.ID = &kc.ID
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to create cluster: %w", err)

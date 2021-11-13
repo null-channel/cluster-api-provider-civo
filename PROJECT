@@ -10,17 +10,8 @@ resources:
   controller: true
   domain: cluster.x-k8s.io
   group: infrastructure
-  kind: CivoCluster
-  path: github.com/null-channel/cluster-api-provider-civo/api/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: cluster.x-k8s.io
-  group: infrastructure
   kind: CivoMachine
-  path: github.com/null-channel/cluster-api-provider-civo/api/v1alpha1
+  path: github.com/null-channel/cluster-api-provider-civo/api/v1beta1
   version: v1alpha1
 - api:
     crdVersion: v1
