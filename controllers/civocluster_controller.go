@@ -19,8 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/civo/civogo"
@@ -161,12 +161,15 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 }
 
 func stringToHostPort(hostPort string) (string, int32) {
-	split := strings.Split(hostPort, ":")
-	i, err := strconv.Atoi(split[1])
+	v, err := url.Parse(hostPort)
 	if err != nil {
 		return "", 0
 	}
-	return split[0], int32(i)
+	i, err := strconv.Atoi(v.Port())
+	if err != nil {
+		return "", 0
+	}
+	return v.Hostname(), int32(i)
 }
 
 // SetupWithManager sets up the controller with the Manager.
