@@ -33,12 +33,59 @@ type CivoClusterSpec struct {
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
 	ControlPlaneEndpoint v1beta1.APIEndpoint `json:"controlPlaneEndpoint,omitempty"`
 
-	// Config represents Civo Kubernetes cluster config
-	Config civogo.KubernetesClusterConfig `json:"config,omitempty"`
-
 	// ID represents cluster identifier
 	// +optional
-	ID *string `json:"id,omitempty"`
+	ID     *string                     `json:"id,omitempty"`
+	Config CivoKubernetesClusterConfig `json:"config,omitempty"`
+}
+
+// KubernetesClusterConfig is used to create a new cluster
+type CivoKubernetesClusterConfig struct {
+	Name              string                            `json:"name,omitempty"`
+	Region            string                            `json:"region,omitempty"`
+	NumTargetNodes    int                               `json:"num_target_nodes,omitempty"`
+	TargetNodesSize   string                            `json:"target_nodes_size,omitempty"`
+	KubernetesVersion string                            `json:"kubernetes_version,omitempty"`
+	NodeDestroy       string                            `json:"node_destroy,omitempty"`
+	NetworkID         string                            `json:"network_id,omitempty"`
+	Tags              string                            `json:"tags,omitempty"`
+	Pools             []CivoKubernetesClusterPoolConfig `json:"pools,omitempty"`
+	Applications      string                            `json:"applications,omitempty"`
+	InstanceFirewall  string                            `json:"instance_firewall,omitempty"`
+	FirewallRule      string                            `json:"firewall_rule,omitempty"`
+}
+
+//KubernetesClusterPoolConfig is used to create a new cluster pool
+type CivoKubernetesClusterPoolConfig struct {
+	ID    string `json:"id,omitempty"`
+	Count int    `json:"count,omitempty"`
+	Size  string `json:"size,omitempty"`
+}
+
+func ToCivoPoolsStruct(config []CivoKubernetesClusterPoolConfig) []civogo.KubernetesClusterPoolConfig {
+	s := make([]civogo.KubernetesClusterPoolConfig, len(config))
+
+	for _, c := range config {
+		s = append(s, civogo.KubernetesClusterPoolConfig{ID: c.ID, Count: c.Count, Size: c.Size})
+	}
+
+	return s
+}
+
+func ToCivoKubernetesStruct(config *CivoKubernetesClusterConfig) *civogo.KubernetesClusterConfig {
+	return &civogo.KubernetesClusterConfig{
+		Name:             config.Name,
+		Region:           config.Region,
+		NumTargetNodes:   config.NumTargetNodes,
+		TargetNodesSize:  config.KubernetesVersion,
+		NodeDestroy:      config.NodeDestroy,
+		NetworkID:        config.NetworkID,
+		Tags:             config.Tags,
+		Pools:            ToCivoPoolsStruct(config.Pools),
+		Applications:     config.Applications,
+		InstanceFirewall: config.InstanceFirewall,
+		FirewallRule:     config.FirewallRule,
+	}
 }
 
 // CivoClusterStatus defines the observed state of CivoCluster
