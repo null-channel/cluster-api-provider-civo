@@ -37,7 +37,7 @@ spec:
             description: CivoClusterSpec defines the desired state of CivoCluster
             properties:
               config:
-                description: Config represents Civo Kubernetes cluster config
+                description: KubernetesClusterConfig is used to create a new cluster
                 properties:
                   applications:
                     type: string

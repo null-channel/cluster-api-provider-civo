@@ -58,7 +58,7 @@ func GetCivoClient() (*civogo.Client, error) {
 	apiKey := os.Getenv("CIVO_API_KEY")
 	region := os.Getenv("CIVO_REGION")
 	if region == "" {
-		setupLog.Info(fmt.Sprintf("Civo region was not set, using default %s", defaultRegion), "")
+		setupLog.Info(fmt.Sprintf("Civo region was not set, using default %s", defaultRegion))
 		region = defaultRegion
 	}
 	if apiKey == "" {
