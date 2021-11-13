@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/civo/civogo"
@@ -124,8 +126,6 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 			return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
 		}
 
-		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
-		civoCluster.Status.Ready = true
 		return ctrl.Result{}, nil
 	}
 
@@ -142,18 +142,31 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 		kc, _ := r.CivoClient.GetKubernetesCluster(*civoCluster.Spec.ID)
 
 		if kc.Ready {
-			civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
+			host, port := stringToHostPort(kc.APIEndPoint)
+			civoCluster.Spec.ControlPlaneEndpoint.Host = host
+			civoCluster.Spec.ControlPlaneEndpoint.Port = port
 			civoCluster.Status.Ready = true
 		}
 
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
 	} else {
 		fmt.Println("Cluster Ready.")
-		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
+		host, port := stringToHostPort(kc.APIEndPoint)
+		civoCluster.Spec.ControlPlaneEndpoint.Host = host
+		civoCluster.Spec.ControlPlaneEndpoint.Port = port
 		civoCluster.Status.Ready = true
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func stringToHostPort(hostPort string) (string, int32) {
+	split := strings.Split(hostPort, ":")
+	i, err := strconv.Atoi(split[1])
+	if err != nil {
+		return "", 0
+	}
+	return split[0], int32(i)
 }
 
 // SetupWithManager sets up the controller with the Manager.
