@@ -4,4 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
+  labels:
+    cluster.x-k8s.io/v1beta1: v1beta1
   name: civoclusters.infrastructure.cluster.x-k8s.io

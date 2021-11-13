@@ -9,6 +9,7 @@ To run this Cluster API with this provider locally:
 2. Create `kind` cluster: `kind create cluster`
 3. Save kubeconfig from `kind` and export it: `kind get kubeconfig > /tmp/kubeconfig && export KUBECONFIG=/tmp/kubeconfig`
 4. Initialize Cluster API controller: `clusterctl init`
-5. Install CRDs: `make install`
+5. Install CRDs: `kubectl apply -f ./config/samples/crds.yaml`
 6. Export your Civo API key: `export CIVO_API_KEY=your_key`
 7. Run provider controller: `make run`
+8. Apply sample manifest with cluster definition: `kubectl apply -f ./config/samples/cluster.yaml`
