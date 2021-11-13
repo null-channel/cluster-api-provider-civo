@@ -117,19 +117,32 @@ func (r *CivoClusterReconciler) delete(ctx context.Context, logger logr.Logger, 
 func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logger, civoCluster *infrastructurev1beta1.CivoCluster) (ctrl.Result, error) {
 	controllerutil.AddFinalizer(civoCluster, civoClusterFinalizer)
 
-	// Create cluster
-	kc, err := r.CivoClient.NewKubernetesClusters(infrastructurev1beta1.ToCivoKubernetesStruct(&civoCluster.Spec.Config))
+	if civoCluster.Spec.ID == nil {
+		// Create cluster
+		kc, err := r.CivoClient.NewKubernetesClusters(infrastructurev1beta1.ToCivoKubernetesStruct(&civoCluster.Spec.Config))
 
-	civoCluster.Spec.ID = &kc.ID
+		civoCluster.Spec.ID = &kc.ID
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to create cluster: %w", err)
+		}
+		if kc == nil {
+			return ctrl.Result{}, fmt.Errorf("not able to retrieve Contol Plane IP")
+		}
+
+		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
+		civoCluster.Status.Ready = true
+		return ctrl.Result{}, nil
+	}
+
+	// Update cluster
+	kc, err := r.CivoClient.UpdateKubernetesCluster(*civoCluster.Spec.ID, infrastructurev1beta1.ToCivoKubernetesStruct(&civoCluster.Spec.Config))
+
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to create cluster: %w", err)
+		return ctrl.Result{}, fmt.Errorf("failed to update cluster: %w", err)
 	}
 	if kc == nil {
 		return ctrl.Result{}, fmt.Errorf("not able to retrieve Contol Plane IP")
 	}
-
-	civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
-	civoCluster.Status.Ready = true
 
 	return ctrl.Result{}, nil
 }
