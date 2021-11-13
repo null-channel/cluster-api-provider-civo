@@ -114,9 +114,9 @@ down:
 	kind delete clusters $(CLUSTERNAME)
 
 up: down
-  kind create cluster $(CLUSTERNAME)\
-kind get kubeconfig > /tmp/kubeconfig && export KUBECONFIG=/tmp/kubeconfig\
-clusterctl init\
-kubectl apply -f ./config/samples/crds.yaml\
-kubectl apply -f ./config/crd/bases\
+  kind create cluster $(CLUSTERNAME) &&\
+kind get kubeconfig > /tmp/kubeconfig && export KUBECONFIG=/tmp/kubeconfig &&\
+clusterctl init &&\
+kubectl apply -f ./config/samples/crds.yaml &&\
+kubectl apply -f ./config/crd/bases &&\
 make run\
