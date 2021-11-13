@@ -35,6 +35,10 @@ type CivoClusterSpec struct {
 
 	// Config represents Civo Kubernetes cluster config
 	Config civogo.KubernetesClusterConfig `json:"config,omitempty"`
+
+	// ID represents cluster identifier
+	// +optional
+	ID *string `json:"id,omitempty"`
 }
 
 // CivoClusterStatus defines the observed state of CivoCluster

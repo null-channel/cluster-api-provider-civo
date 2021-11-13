@@ -123,6 +123,9 @@ spec:
                 - host
                 - port
                 type: object
+              id:
+                description: ID represents cluster identifier
+                type: string
             type: object
           status:
             description: CivoClusterStatus defines the observed state of CivoCluster

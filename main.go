@@ -110,8 +110,8 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.CivoClusterReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:     mgr.GetClient(),
+		Scheme:     mgr.GetScheme(),
 		CivoClient: civoClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CivoCluster")
