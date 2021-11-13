@@ -19,12 +19,12 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/civo/civogo"
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
-	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -65,18 +65,8 @@ func (r *CivoClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// Persist any changes to CivoCluster.
-	h, err := patch.NewHelper(civoCluster, r.Client)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("init patch helper: %w", err)
-	}
 	defer func() {
-		if e := h.Patch(ctx, civoCluster); e != nil {
-			if err != nil {
-				err = fmt.Errorf("%s: %w", e.Error(), err)
-			}
-			err = fmt.Errorf("patch: %w", e)
-		}
+		r.Client.Update(ctx, civoCluster)
 	}()
 
 	// Check if owner Cluster resource exists
@@ -126,7 +116,14 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 			return ctrl.Result{}, fmt.Errorf("not able to retrieve Contol Plane IP")
 		}
 
+		fmt.Println("===========================================================")
+		fmt.Println(kc.ID)
+
 		civoCluster.Spec.ID = &kc.ID
+		if !kc.Ready {
+			return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
+		}
+
 		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
 		civoCluster.Status.Ready = true
 		return ctrl.Result{}, nil
@@ -135,10 +132,25 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 	// Update cluster
 	kc, err := r.CivoClient.UpdateKubernetesCluster(*civoCluster.Spec.ID, infrastructurev1beta1.ToCivoKubernetesStruct(&civoCluster.Spec.Config))
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to update cluster: %w", err)
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, fmt.Errorf("failed to update cluster: %w", err)
 	}
 	if kc == nil {
 		return ctrl.Result{}, fmt.Errorf("not able to retrieve Contol Plane IP")
+	}
+
+	if !kc.Ready {
+		kc, _ := r.CivoClient.GetKubernetesCluster(*civoCluster.Spec.ID)
+
+		if kc.Ready {
+			civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
+			civoCluster.Status.Ready = true
+		}
+
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
+	} else {
+		fmt.Println("Cluster Ready.")
+		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
+		civoCluster.Status.Ready = true
 	}
 
 	return ctrl.Result{}, nil
