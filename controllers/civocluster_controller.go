@@ -142,14 +142,12 @@ func (r *CivoClusterReconciler) reconcile(ctx context.Context, logger logr.Logge
 		kc, _ := r.CivoClient.GetKubernetesCluster(*civoCluster.Spec.ID)
 
 		if kc.Ready {
-			fmt.Print("I don't like civo's api --------- marek counts 2021")
 			civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
 			civoCluster.Status.Ready = true
 		}
 
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
 	} else {
-		fmt.Println("+++++++++++++++++++++++++++++++++++++++")
 		fmt.Println("Cluster Ready.")
 		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
 		civoCluster.Status.Ready = true
