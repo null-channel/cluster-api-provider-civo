@@ -104,13 +104,13 @@ func (r *CivoClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 // TODO Cluster deletion
 func (r *CivoClusterReconciler) delete(ctx context.Context, logger logr.Logger, civoCluster *infrastructurev1beta1.CivoCluster) (ctrl.Result, error) {
-	controllerutil.RemoveFinalizer(civoCluster, civoClusterFinalizer)
 	logger = log.FromContext(ctx)
 	logger.Info("Deleting civo cluster")
 	_, err := r.CivoClient.DeleteKubernetesCluster(*civoCluster.Spec.ID)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to delete cluster: %w", err)
 	}
+	controllerutil.RemoveFinalizer(civoCluster, civoClusterFinalizer)
 	return ctrl.Result{}, nil
 }
 
