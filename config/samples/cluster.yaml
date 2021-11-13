@@ -15,7 +15,7 @@ metadata:
 spec:
   config:
     name: sample
-    region: LON1
-    num_target_nodes: 0
+    num_target_nodes: 1
+    network_id: "default"
+    instance_firewall: Default
     target_nodes_size: "Extra Small"
-    kubernetes_version: "1.22"
