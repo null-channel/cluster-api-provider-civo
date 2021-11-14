@@ -22,6 +22,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"regexp"
+	"net/url"
+	"strconv"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -160,6 +162,9 @@ func (r *CivoClusterReconciler) reconcile(
 
 			return ctrl.Result{Requeue: true}, nil
 		} else {
+			host, port := stringToHostPort(kc.APIEndPoint)
+			civoCluster.Spec.ControlPlaneEndpoint.Host = host
+			civoCluster.Spec.ControlPlaneEndpoint.Port = port
 			civoCluster.Status.Ready = true
 			r.Client.Status().Update(ctx, civoCluster)
 		}
@@ -167,7 +172,9 @@ func (r *CivoClusterReconciler) reconcile(
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
 	} else {
 		fmt.Println("Cluster Ready.")
-		civoCluster.Spec.ControlPlaneEndpoint.Host = kc.APIEndPoint
+		host, port := stringToHostPort(kc.APIEndPoint)
+		civoCluster.Spec.ControlPlaneEndpoint.Host = host
+		civoCluster.Spec.ControlPlaneEndpoint.Port = port
 		civoCluster.Status.Ready = true
 		r.Client.Status().Update(ctx, civoCluster)
 	}
@@ -271,6 +278,18 @@ func (r *CivoClusterReconciler) getNode(ctx context.Context, cluster *capiv1beta
 	}
 
 	return &nodeList.Items[0], nil
+}
+  
+func stringToHostPort(hostPort string) (string, int32) {
+	v, err := url.Parse(hostPort)
+	if err != nil {
+		return "", 0
+	}
+	i, err := strconv.Atoi(v.Port())
+	if err != nil {
+		return "", 0
+	}
+	return v.Hostname(), int32(i)
 }
 
 // SetupWithManager sets up the controller with the Manager.
