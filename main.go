@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	capiremote "sigs.k8s.io/cluster-api/controllers/remote"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -109,10 +110,21 @@ func main() {
 		setupLog.Error(err, "failed to init Civo client")
 		os.Exit(1)
 	}
+	clusterTracker, err := capiremote.NewClusterCacheTracker(
+		mgr,
+		capiremote.ClusterCacheTrackerOptions{},
+	)
+	if err != nil {
+		setupLog.Error(err,"Failed to init ClusterTracker")
+		os.Exit(1)
+	}
+
+
 	if err = (&controllers.CivoClusterReconciler{
 		Client:     mgr.GetClient(),
 		Scheme:     mgr.GetScheme(),
 		CivoClient: civoClient,
+		ClusterTracker: clusterTracker,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CivoCluster")
 		os.Exit(1)
